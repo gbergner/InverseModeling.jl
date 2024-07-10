@@ -1,40 +1,52 @@
 export gauss_model, gauss_start, gauss_fit
 
-function gauss_model(sz, parameters)
+function gauss_model(sz::NTuple{N, Int}, parameters) where {N}
     # pos = collect(idx(sz))
     T = Float32;
+    # ids = collect(idx(sz))
     all_axes = zeros(T, prod(sz))
-    # function agauss(pos, i0, x0, σ, offset)
-    #     # tbuf = sum(abs2.((pos .- x0)./σ)) # cannot be used 
-    #     tbuf = abs2.((pos[1].-x0[1]) ./σ[1]) #sum(abs2.((pos .- x0)./σ))
-    #     for n=2:lastindex(x0) # length(sz)
-    #         tbuf += abs2.((pos[n].-x0[n]) ./σ[((n-1)%length(σ))+1])   #sum(abs2.((pos .- x0)./σ))
-    #     end
-    #     if length(σ) > length(x0) # include covariance terms
-    #         c=1
-    #         for n=2:length(x0)÷2+1 # iterate over covariance terms (upper triangle in covariance matrix)
-    #             for m=1:n-1 # iterate over covariance terms
-    #                 tbuf += (pos[n].-x0[n]).*(pos[m].-x0[m]) .* σ[length(x0)+c]
-    #                 # @show σ[length(x0)+c]
-    #                 c += 1
-    #             end
-    #         end
-    #     end
-    #     return offset + i0.*exp(.-tbuf./2)
-    # end
+    midpos = sz .÷ 2 .+1
+    """
+        agauss(pos, i0, x0, σ, offset)
+    calculates a Gaussian function at the positions `pos` with the parameters `i0`, `x0`, `σ` and `offset`.
+    
+    Parameters: 
+    + `pos` : an array with tuples of positions to calculate
+    + `i0` : the intensity of the Gaussian
+    + `x0` : the center of the Gaussian
+    + `σ` : the standard deviation of the Gaussian
+    + `offset` : the (intensity) offset of the Gaussian
+    """
+    function agauss(pos, i0, x0, σ, offset)::Array{T, N}
+        # tbuf = sum(abs2.((pos .- x0)./σ)) # cannot be used 
+        tbuf = abs2.((pos[1].-x0[1]) ./σ[1]) #sum(abs2.((pos .- x0)./σ))
+        for n=2:lastindex(x0) # length(sz)
+            tbuf += abs2.((pos[n].-x0[n]) ./σ[((n-1)%length(σ))+1])   #sum(abs2.((pos .- x0)./σ))
+        end
+        if length(σ) > length(x0) # include covariance terms
+            c=1
+            for n=2:length(x0)÷2+1 # iterate over covariance terms (upper triangle in covariance matrix)
+                for m=1:n-1 # iterate over covariance terms
+                    tbuf += (pos[n].-x0[n]).*(pos[m].-x0[m]) .* σ[length(x0)+c]
+                    # @show σ[length(x0)+c]
+                    c += 1
+                end
+            end
+        end
+        return offset + i0.*exp(.-tbuf./2)
+    end
     # using Ref() protects these vector-type arguments from immediate broadcasting here
     # buffer to store the temporary calculation
-    tmp = zeros(Float32, sz)
-    function fit_fkt(params)
-        sigma = params(:σ)
-        pos = params(:μ)
-        gs = gaussian_sep(sz; all_axes=all_axes, sigma=sigma, pos=pos)
-        tmp .= T(params(:offset)) .+ T(params(:i0)) .* gs 
-        return tmp
+
+    # tmp = zeros(Float32, sz)
+    function fit_fkt(params) # ::Array{T, N}
+        # return agauss.(ids, params(:i0), Ref(params(:μ)), Ref(params(:σ)), params(:offset)) 
+        gs = gaussian_nokw_sep(sz, midpos .+ params(:μ), T(1), params(:σ); all_axes=all_axes)
+        return T.(params(:offset)) .+ T.(params(:i0)) .* gs  # The dot is needed as these are fill(value) values
     end
 
     fit_parameters, fixed_vals, forward, backward, get_fit_results = create_forward(fit_fkt, parameters)
-    return forward, fit_parameters, get_fit_results
+    return forward, fit_parameters, get_fit_results, fit_fkt
 end
 
 function tuple_sum(tarray)

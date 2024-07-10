@@ -100,7 +100,7 @@ function get_fwd_val(val::ClampSum, id, fit, non_fit)
     # @show sum(myvals)
     reshape(vcat(myvals, val.mysum - sum(myvals)), val.mysize)
 end
-get_fwd_val(val, id, fit_params, non_fit) = get_fwd_val(@view fit_params[id])
+get_fwd_val(val, id, fit_params, non_fit) = get_fwd_val(fit_params[id]) # @view fit_params[id]
 # begin 
 #     tmp = @view fit_params[id]#  getindex(fit, id)
 #     get_fwd_val(tmp)
@@ -189,7 +189,7 @@ a tuple of
 `backward`      : the adjoint model
 `get_fit_results`: a function that retrieves the fit result for the result of optim
 """
-function create_forward(fwd, params, dtype=Float32) # 
+function create_forward(fwd::Function, params, dtype=Float32) # 
     fit_params, fixed_params, get_fit_results, stripped_params = prepare_fit(params, dtype) #
 
     # can be called with a NamedTuple or a ComponentArray. This will call the fwd function, 
@@ -199,7 +199,7 @@ function create_forward(fwd, params, dtype=Float32) #
         # g(id) = get_val(getindex(stripped_params, id), id, fit, fixed_params) 
         # g is a function which receives an id and returns the corresponding paramter.
         # id corresponds to the variable names in a named tuple or ComponentArray
-        function g(id)
+        function g(id) # an accessor function for the parameters
             #v = get_fwd_val(stripped_params[id], id, fit, fixed_params) 
             #@show stripped_params[id]
             #@show v
@@ -260,7 +260,7 @@ the result as provided by Optim.optimize()
 function optimize_model(loss_fkt::Function, start_vals; iterations=100, optimizer=LBFGS(), kwargs...)
     optim_options = Optim.Options(;iterations=iterations, kwargs...)
     g!(G,vec) = G.=gradient(loss_fkt,vec)[1]
-    @time optim_res = Optim.optimize(loss_fkt, g!, start_vals, optimizer, optim_options)
+    optim_res = Optim.optimize(loss_fkt, g!, start_vals, optimizer, optim_options)
     # optim_res = Optim.optimize(loss_fkt, start_vals, optimizer, optim_options) # ;  autodiff = :forward
     optim_res
 end
