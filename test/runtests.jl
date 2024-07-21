@@ -10,7 +10,7 @@ using InverseModeling
 # myloss(a) = sum(abs2.(a .* real.(ifft(fft(a) .* b, (1,2,3))) .- m))
 # @time gradient(myloss, a)[1];
 
-    # gradient test
+# gradient test
 a = rand(ComplexF32,10,10)
 b = rand(ComplexF32,10,10)
 m = abs.(a) .> 0.3

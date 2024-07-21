@@ -259,8 +259,24 @@ the result as provided by Optim.optimize()
 """
 function optimize_model(loss_fkt::Function, start_vals; iterations=100, optimizer=LBFGS(), kwargs...)
     optim_options = Optim.Options(;iterations=iterations, kwargs...)
-    g!(G,vec) = G.=gradient(loss_fkt,vec)[1]
-    optim_res = Optim.optimize(loss_fkt, g!, start_vals, optimizer, optim_options)
+    
+    function fg!(F, G, vec)
+        val_pb = Zygote.pullback(loss_fkt, vec);
+        # println("in fg!: F:$(!isnothing(F)) G:$(!isnothing(G))")
+        if !isnothing(G)
+            G .= val_pb[2](one(eltype(vec)))[1]
+            # mutating calculations specific to g!
+        end
+        if !isnothing(F)
+            # calculations specific to f
+            return val_pb[1]
+        end
+    end
+    od = OnceDifferentiable(Optim.NLSolversBase.only_fg!(fg!), start_vals)
+    # g!(G, vec) = G.=gradient(loss_fkt, vec)[1]
+
+    optim_res = Optim.optimize(od, start_vals, optimizer, optim_options)
+    # optim_res = Optim.optimize(loss_fkt, g!, start_vals, optimizer, optim_options)
     # optim_res = Optim.optimize(loss_fkt, start_vals, optimizer, optim_options) # ;  autodiff = :forward
     optim_res
 end
