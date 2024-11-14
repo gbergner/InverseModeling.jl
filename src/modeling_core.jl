@@ -149,8 +149,8 @@ function prepare_fit(vals, dtype=Float64)  #
     stripped_params = Dict() # removed all modifications from Fixed values
     for (key, val) in zip(keys(vals), vals)        
         if is_fixed(val) # isa Fixed
-            non_fit_dict[key] = get_val(val) # all other modifiers are ignored
-            stripped_params[key] = Fixed(get_val(val)) 
+            non_fit_dict[key] = get_val(val) # all other modifiers are ignored. 
+            stripped_params[key] = Fixed(get_val(val))
         else
             fit_dict[key] = get_inv_val(val)
             stripped_params[key] = val
@@ -160,8 +160,8 @@ function prepare_fit(vals, dtype=Float64)  #
     non_fit_named_tuple = construct_named_tuple(non_fit_dict)
     stripped_params = construct_named_tuple(stripped_params)
     
-    fit_params = ComponentArray{dtype}(fit_named_tuple) # the optim routine cannot deal with tuples
-    fixed_params = ComponentArray{dtype}(non_fit_named_tuple)
+    fit_params = ComponentArray(fit_named_tuple) # the optim routine cannot deal with tuples. ComponentArray{dtype} does NOT work for CUDA!
+    fixed_params = ComponentArray(non_fit_named_tuple) # ComponentArray{dtype} does NOT work for CUDA!
 
     function get_fit_results(res)
         # g(id) = get_val(getindex(fit_params, id), id, fit_params, fixed_params) 
@@ -233,7 +233,7 @@ function sim_forward(fwd, params)
 end
 
 """
-    loss(data, forward, my_norm=norm_gaussian)
+    loss(data, forward, loss_gaussian)
 
 returns a loss function given a forward model `forward` with some measured data `data`. The noise_model is specified by `my_norm`.
 The returned function needs to be called with parameters to be given to the forward model as arguments. 
