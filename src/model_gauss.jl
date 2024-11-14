@@ -4,7 +4,7 @@ function gauss_model(sz::NTuple{N, Int}, parameters) where {N}
     # pos = collect(idx(sz))
     T = Float32;
     # ids = collect(idx(sz))
-    all_axes = zeros(T, sum(sz)) # only the sum of the axes need to be preallocated, since this is separable
+    all_axes = get_bc_mem(Array{T}, sz, get_operator(gaussian_raw)) # only the sum of the axes need to be preallocated, since this is separable
     midpos = sz .÷ 2 .+1
     # """
     #     agauss(pos, i0, x0, σ, offset)
@@ -153,7 +153,7 @@ performs a fit of an ND-Gaussian function to ND data.
 a named tuple with the result parameters as a tuple (see above), additionally containing the parameter `:FWHM` for convenience referring to the Full width at half maximum of the Gaussian
 and the fit forward projection and the result of the optim call.
 """
-function gauss_fit(meas, start_params=[], ndims=[]; verbose=false, optimizer=LBFGS(), iterations=100, noise_model=loss_gaussian, bg=eltype(meas)(0), has_covariance=false, kwargs...)
+function gauss_fit(meas, start_params=[], ndims=[]; verbose=false, optimizer=LBFGS(), iterations=100, noise_model=loss_gaussian, bg=eltype(meas)(0), has_covariance=false, pixelsize=nothing, kwargs...)
     start_params = let
         if isempty(start_params)
             gauss_start(meas, has_covariance=has_covariance)
@@ -170,7 +170,9 @@ function gauss_fit(meas, start_params=[], ndims=[]; verbose=false, optimizer=LBF
     res = optimize_model(loss(meas, forward, noise_model, bg), fit_parameters; optimizer=optimizer, iterations=iterations, kwargs...)
     # fit_params = Optim.minimizer(res)
     bare, fit_params = get_fit_results(res)
-    #fit_params[:σ] .*= pixelsize
+    if !isnothing(pixelsize)
+        fit_params[:σ] .*= pixelsize
+    end
     #fit_params[:i0] = fit_params[:i0] * scale
     #fit_params[:offset] = fit_params[:offset] * scale
     FWHMs = get_val(fit_params[:σ]) .* sqrt(log(2) *2)*2

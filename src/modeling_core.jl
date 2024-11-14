@@ -259,7 +259,7 @@ the result as provided by Optim.optimize()
 """
 function optimize_model(loss_fkt::Function, start_vals; iterations=100, optimizer=LBFGS(), kwargs...)
     optim_options = Optim.Options(;iterations=iterations, kwargs...)
-    
+
     function fg!(F, G, vec)
         val_pb = Zygote.pullback(loss_fkt, vec);
         # println("in fg!: F:$(!isnothing(F)) G:$(!isnothing(G))")
@@ -311,6 +311,7 @@ function optimize_model(start_val::NamedTuple, fwd_model::Function, meas, loss_t
         return res
     end
 end
+
 
 function get_loss(start_val::NamedTuple, fwd_model::Function, meas, loss_type=loss_gaussian)
     start_vals, fixed_vals, forward, backward, get_fit_results = create_forward(fwd_model, start_val);
