@@ -261,15 +261,19 @@ function optimize_model(loss_fkt::Function, start_vals; iterations=100, optimize
     optim_options = Optim.Options(;iterations=iterations, kwargs...)
 
     function fg!(F, G, vec)
+        #val, mygrad = Zygote.withgradient(loss_fkt, vec)
         val_pb = Zygote.pullback(loss_fkt, vec);
         # println("in fg!: F:$(!isnothing(F)) G:$(!isnothing(G))")
         if !isnothing(G)
+            # G .= mygrad
+            @show val_pb[2](one(eltype(vec)))[1]
             G .= val_pb[2](one(eltype(vec)))[1]
             # mutating calculations specific to g!
         end
         if !isnothing(F)
             # calculations specific to f
             return val_pb[1]
+            # return val # val_pb[1]
         end
     end
     od = OnceDifferentiable(Optim.NLSolversBase.only_fg!(fg!), start_vals)
@@ -372,11 +376,15 @@ end
 
 function ChainRulesCore.rrule(::typeof(sum!_), mymem, accum!, N)
     Y = sum!_(mymem, accum!, N)
-    function sum!__pullback(y)
-        @show "pullback"
+    accum_grad(a_mem, a_idx) = Zygote.pullback(accum!, a_mem, a_idx)[2];
+    #val, mygrad = Zygote.withgradient(loss_fkt, vec)
+
+    function sum!__pullback(y) # NOT YET CORRECT with the pullback of accum!, which is needed.
+        @show "sum!_ pullback"
         @show size(mymem)
-        @show size(y)
-        return NoTangent(), y .* mymem, NoTangent(), NoTangent()
+        @show typeof(y)
+        # sum!_(mymem, accum_grad, N)
+        return NoTangent(), y .* mymem, mymem, NoTangent()
     end
     return Y, sum!__pullback
 end
