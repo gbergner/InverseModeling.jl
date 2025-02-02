@@ -109,7 +109,7 @@ get_fwd_val(val, id, fit_params, non_fit) = get_fwd_val(fit_params[id]) # @view 
 # inverse opterations for the pre-forward model parts
 get_inv_val(val, fct=identity) = fct.(val)
 get_inv_val(val::Fixed, fct=identity) = get_inv_val(val.data, fct)
-get_inv_val(val::Positive, fct=identity) = get_inv_val(val.data, (x)->(sqrt.(fct.(x))))
+get_inv_val(val::Positive, fct=identity) = get_inv_val(val.data, (x)->(sqrt.(fct.(max.(x, 0)))))
 get_inv_val(val::Normalize, fct=identity) = get_inv_val(val.data, (x)->fct.(x)./ val.factor) 
 get_inv_val(val::ClampSum, fct=identity) = get_inv_val(val.data, (x)->clamp_sum(fct.(x)))
 function clamp_sum(val)
@@ -266,7 +266,7 @@ function optimize_model(loss_fkt::Function, start_vals; iterations=100, optimize
         # println("in fg!: F:$(!isnothing(F)) G:$(!isnothing(G))")
         if !isnothing(G)
             # G .= mygrad
-            @show val_pb[2](one(eltype(vec)))[1]
+            # @show val_pb[2](one(eltype(vec)))[1]
             G .= val_pb[2](one(eltype(vec)))[1]
             # mutating calculations specific to g!
         end
