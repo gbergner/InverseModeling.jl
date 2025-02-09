@@ -3,15 +3,18 @@ export get_loss
 export Fixed, Positive, Normalize, ClampSum
 export into_mask!
 export sum!_
+# export size # for Modifator type arguments
+
+abstract type Modificator end
 
 # this datatyp specifies that this parameter is not part of the fit
-struct Fixed{T}
+struct Fixed{T} <: Modificator
     data::T
 end
 
 # this datatyp specifies that this parameter is kept positive during the fit
 # this is achieved by introducing an auxiliary function whos abs2.() yields the parameter
-struct Positive{T}
+struct Positive{T} <: Modificator
     data::T
 end
 
@@ -21,9 +24,13 @@ end
     Note that by chosing a fit parameter `p` for example using `Normalize(p, maximum(p))` or `Normalize(p, mean(p))`, the fit-variable will be unitless,
     but the result will automatically be cast back to the original scale. This helps the fit to converge.
 """
-struct Normalize{T,F}
+struct Normalize{T,F} <: Modificator
     data::T
     factor::F
+end
+
+function Base.size(d::Modificator, varargs...)
+    return size(d.data, varargs...)
 end
 
 """ ClampSum{T}
