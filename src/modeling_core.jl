@@ -1,6 +1,6 @@
 export create_forward, sim_forward, loss, optimize_model
 export get_loss
-export Fixed, Positive, Normalize, ClampSum
+export Fixed, Positive, Normalize, ClampSum, BoundedSoftMax
 export into_mask!
 export sum!_
 # export size # for Modifator type arguments
@@ -123,6 +123,32 @@ function clamp_sum(val)
     myval = get_inv_val(val)
     return myval[1:end-1] # optimize the 1D- view with the last value missing
 end
+
+"""BoundedSoftMax{T}
+    this datatyp specifies that parameter is bounded between `lower` and `upper` values. 
+    Achieved with sigmoid function to map the optimizer variable to the range [lower, upper].
+    The inverse mapping is done by using the logit function.
+"""
+struct BoundedSoftMax{T} <: Modificator
+    data::T
+    lower::Float32
+    upper::Float32
+end
+
+# Helper functions:
+sigmoid(x) = 1 / (1 + exp(-x))
+logit(x) = log(x / (1 - x))
+
+
+is_fixed(val::BoundedSoftMax) = is_fixed(val.data)
+
+get_val(val::BoundedSoftMax) = get_val(val.data)
+
+get_fwd_val(val::BoundedSoftMax) = val.lower .+ (val.upper - val.lower) .* sigmoid.(get_fwd_val(val.data))
+get_fwd_val(val::BoundedSoftMax, id, fit, non_fit) = val.lower .+ (val.upper - val.lower) .* sigmoid.(get_fwd_val(val.data, id, fit, non_fit))
+
+get_inv_val(val::BoundedSoftMax, fct=identity) = get_inv_val(val.data, (x) -> logit.((fct.(x) .- val.lower) ./ (val.upper - val.lower)))
+
 
 # function truncated_view(dat, dims)
 #     return @view dat[(1:ifelse(d in dims, size(dat,d)-1, size(dat, d)) for d in ndims(dat))...]
