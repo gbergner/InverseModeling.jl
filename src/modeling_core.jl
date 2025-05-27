@@ -114,7 +114,8 @@ get_fwd_val(val, id, fit_params, non_fit) = get_fwd_val(fit_params[id]) # @view 
 # end
 
 # inverse opterations for the pre-forward model parts
-get_inv_val(val, fct=identity) = fct.(val)
+get_inv_val(val) = val
+get_inv_val(val, fct) = fct(val)
 get_inv_val(val::Fixed, fct=identity) = get_inv_val(val.data, fct)
 get_inv_val(val::Positive, fct=identity) = get_inv_val(val.data, (x)->(sqrt.(fct.(max.(x, 0)))))
 get_inv_val(val::Normalize, fct=identity) = get_inv_val(val.data, (x)->fct.(x)./ val.factor) 
@@ -387,9 +388,9 @@ function ChainRulesCore.rrule(::typeof(sum!_), mymem, accum!, N)
     #val, mygrad = Zygote.withgradient(loss_fkt, vec)
 
     function sum!__pullback(y) # NOT YET CORRECT with the pullback of accum!, which is needed.
-        @show "sum!_ pullback"
-        @show size(mymem)
-        @show typeof(y)
+        # @show "sum!_ pullback"
+        # @show size(mymem)
+        # @show typeof(y)
         # sum!_(mymem, accum_grad, N)
         return NoTangent(), y .* mymem, mymem, NoTangent()
     end

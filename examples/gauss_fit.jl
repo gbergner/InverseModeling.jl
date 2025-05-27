@@ -38,6 +38,7 @@ function test_gaussfit()
 
     start_val = (i0 = 8.0, σ=[4.0, 7.0], μ=[1.0, 2.1], offset=1.8) # Fixed()
     res, res_img, resv = gauss_fit(meas, start_val, x_abstol = 0.01f0); # 
+    @time res, res_img, resv = gauss_fit(meas, start_val, x_abstol = 0.01f0); # 3.771 ms (27558 allocations: 8.33 MiB)
     @btime res, res_img, resv = gauss_fit($meas, $start_val, x_abstol = 0.01f0); # 3.771 ms (27558 allocations: 8.33 MiB)
 
     # start_val = (i0 = 10, σ=[2.0, 2.0], μ=[1.8, 2.5], offset=0.0 ) # Fixed()
