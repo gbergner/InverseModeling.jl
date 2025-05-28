@@ -12,3 +12,9 @@ NDTools = "98581153-e998-4eef-8d0d-5ec2c052313d"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 SeparableFunctions = "c8c7ead4-852c-491e-a42d-3d43bc74259e"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[extras]
+FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestEnv = "1e6cf692-eddd-4d53-88a5-2d735e33781b"
+TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
