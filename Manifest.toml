@@ -713,7 +713,7 @@ version = "0.7.0"
 
 [[deps.SeparableFunctions]]
 deps = ["ChainRulesCore", "ImageTransformations", "Interpolations", "LazyArrays", "LinearAlgebra", "NDTools", "StaticArrays"]
-path = "../SeparableFunctions.jl"
+git-tree-sha1 = "5b0dbbb16043eedc6515f1a5cbaa04470e52f858"
 uuid = "c8c7ead4-852c-491e-a42d-3d43bc74259e"
 version = "0.3.1"
 
