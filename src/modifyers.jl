@@ -1,4 +1,4 @@
-export Fixed, Normalize, ClampSum, BoundedSoftMax, Positive, PositiveH, BoundedSoftMaxH
+export Fixed, Normalize, ClampSum, Positive, PositiveH, BoundedSoftMax, BoundedSoftMaxH
 
 abstract type Modificator end
 
@@ -19,6 +19,9 @@ get_inv_val(val) = val
 get_inv_val(val, fct) = fct(val)
 
 # this datatyp specifies that this parameter is not part of the fit
+"""
+    struct Fixed{T} <: Modificator
+"""
 struct Fixed{T} <: Modificator
     data::T
 end
@@ -30,7 +33,8 @@ get_fwd_val(val::Fixed, id, fit, non_fit) = getindex(non_fit, id) # do not apply
 get_inv_val(val::Fixed, fct=identity) = get_inv_val(val.data, fct)
 
 
-"""  Normalize{T}
+"""  
+    struct Normalize{T,F} <: Modificator
     this datatyp specifies that this parameter is normalized before the fit 
     this is achieved by deviding by the factor in the inverse path and multiplying by it in the forward model.
     Note that by chosing a fit parameter `p` for example using `Normalize(p, maximum(p))` or `Normalize(p, mean(p))`, the fit-variable will be unitless,
@@ -53,7 +57,8 @@ function clamp_sum(val)
     return myval[1:end-1] # optimize the 1D- view with the last value missing
 end
 
-""" ClampSum{T}
+""" 
+    struct ClampSum{T, S, N} <: Modificator
     this contraint ensures that the value will never change its sum (optionally over predifined dimensions) during optimization. This is useful to avoid ambiguities during optimization.
     In practice the last value is simply computed by the given initial sum minus all other values.
 """
@@ -63,7 +68,8 @@ struct ClampSum{T, S, N}
     mysize::NTuple{N, Int}
 end
 
-""" ClampSum(dat::T, dims=ntuple((n)->n, ndims(dat))) where {T}
+""" 
+struct ClampSum(dat::T, dims=ntuple((n)->n, ndims(dat))) where {T} <: Modificator
 
 convenience constructor. 
 # Arguments
@@ -97,7 +103,8 @@ end
 # end
 get_inv_val(val::ClampSum, fct=identity) = get_inv_val(val.data, (x)->clamp_sum(fct.(x)))
 
-""" Positive{T}
+""" 
+struct Positive{T} <: Modificator
     this datatyp specifies that this parameter is positive during the fit
     this is achieved by introducing an auxiliary function whos abs2.() yields the parameter
     Note that the inverse operation will return the square root of the value, picking only the positive branch as the starting value.
@@ -115,7 +122,8 @@ get_inv_val(val::Positive, fct=identity) = get_inv_val(val.data, (x)->(sqrt.(fct
 sigmoid(x) = 1 / (1 + exp(-x))
 logit(x) = log(x / (1 - x))
 
-"""BoundedSoftMax{T}
+"""
+    struct BoundedSoftMax{T} <: Modificator
     this datatyp specifies that parameter is bounded between `lower` and `upper` values. 
     Achieved with sigmoid function to map the optimizer variable to the range [lower, upper].
     The inverse mapping is done by using the logit function.
@@ -152,7 +160,8 @@ get_inv_val(val::BoundedSoftMax, fct=identity) = get_inv_val(val.data, (x) -> lo
 piecewise_hyperbolic(x) = ifelse(x < 0, 1/(1-x), 1+x)
 piecewise_hyperbolic_inv(x) = ifelse(x < 1, 1 - 1/x, x - 1)
 
-""" PositiveH{T}
+"""
+    struct PositiveH{T} <: Modificator
     this datatyp specifies that this parameter is positive during the fit
     this is achieved by introducing an auxiliary function whos abs2.() yields the parameter
     Note that the inverse operation will return the square root of the value, picking only the positive branch as the starting value.
@@ -170,7 +179,8 @@ get_inv_val(val::PositiveH, fct=identity) = get_inv_val(val.data, (x)->(piecewis
 sigmoid_hyperbolic(x) = 1 / (1 + piecewise_hyperbolic(-x))
 sigmoid_hyperbolic_inv(x) = piecewise_hyperbolic_inv(x / (1 - x))
 
-"""BoundedSoftMaxH{T}
+"""
+struct BoundedSoftMaxH{T} <: Modificator
     this datatyp specifies that parameter is bounded between `lower` and `upper` values. 
     Achieved with sigmoid function to map the optimizer variable to the range [lower, upper].
     The inverse mapping is done by using the logit function.
@@ -192,7 +202,6 @@ struct BoundedSoftMaxH{T} <: Modificator
         end
         return new{T}(dat, lower, upper)
     end
-
 end
 
 is_fixed(val::BoundedSoftMaxH) = is_fixed(val.data)
