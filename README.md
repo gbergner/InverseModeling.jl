@@ -1,4 +1,4 @@
-# InverseModeling
+# InverseModeling.jl
 is a general purpose toolbox aiming to streamline the construction and execution of inverse models.
 In other words, it helps fitting various model parameters to experimental data using statistical models, regularizers and contraints.
 The optimization itself mostly uses grandient-based optimizers, present in the `Optim.jl` toolbox.
