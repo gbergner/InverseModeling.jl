@@ -1,4 +1,4 @@
-@testset "Modyfyer Normalize" begin
+@testset "Modifyer Normalize" begin
     myval = 2.0
     mynorm = 3.0
     tst_val = (tst1=Normalize(myval, mynorm), )
@@ -10,13 +10,13 @@
     @test isapprox(fwd, myval)
 end
 
-@testset "Modyfyer Fixed" begin
+@testset "Modifyer Fixed" begin
     tst_val = (tst1=10.0, tst2=Fixed(Normalize(Positive(15.0), 10)))
     tst_start_vals, fixed_vals, forward, backward, get_fit_results = create_forward((x)->x(:tst1), tst_val);
     @test fixed_vals == InverseModeling.ComponentVector((tst2=15.0,))
 end
 
-@testset "Modyfyer Positive" begin
+@testset "Modifyer Positive" begin
     val =15.0
     tst_val = (tst1=Positive(val), )
     tst_start_vals, fixed_vals, forward, backward, get_fit_results = create_forward((x)->x(:tst1), tst_val);
@@ -27,7 +27,17 @@ end
     @test tst_start_vals.tst1 ≈ sqrt(val)
 end
 
-@testset "Modyfyer ClampSum" begin
+@testset "Modifyer BoundedSoftMax" begin
+    val = [0.5, 0.2, 0.9]
+    tst_val = (tst1=BoundedSoftMax(val, 0, 1),)
+    tst_start_vals, fixed_vals, forward, backward, get_fit_results = create_forward((x)->x(:tst1), tst_val);
+
+    fwd = forward(tst_start_vals)
+    @test isapprox(fwd, val)
+    @test tst_start_vals.tst1[1] ≈ 0
+end
+
+@testset "Modifyer ClampSum" begin
     val = rand(3,4)
     tst_val = (tst1=ClampSum(val), )
     tst_start_vals, fixed_vals, forward, backward, get_fit_results = create_forward((x)->x(:tst1), tst_val);

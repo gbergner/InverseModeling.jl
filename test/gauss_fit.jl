@@ -1,3 +1,5 @@
+using Random, Noise
+
 function check_res(res, true_val, atol=1f-1, otol=0.8)
     @test isapprox(res[:i0], true_val[:i0], atol=atol)
     @test isapprox(res[:μ], true_val[:μ], atol=atol)
