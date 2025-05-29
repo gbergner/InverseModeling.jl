@@ -14,7 +14,14 @@ SeparableFunctions = "c8c7ead4-852c-491e-a42d-3d43bc74259e"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-NDTools = "0.8"
+NDTools = "0.7, 0.8"
+Zygote = "0.7"
+LaTeXStrings = "1"
+IndexFunArrays = "0.2"
+ComponentArrays = "0.15"
+ChainRulesCore = "1"
+SeparableFunctions = "0.3"
+Optim = "1"
 
 [extras]
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
